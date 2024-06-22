@@ -1,6 +1,5 @@
 import Header from "./components/header";
 import Context from './components/context'
-import PostList from './components/postList'
 
 
 

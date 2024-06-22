@@ -21,9 +21,11 @@ interface FormData {
 
 const PostForm: React.FC<PostFormProps> = ({ addPost }) => {
   const [formData, setFormData] = useState<FormData>({ wish: '', author: '', image: null });
+  const [isLoading, setIsLoading] = useState(false); // Loading state
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
+    setIsLoading(true); // Start loading
     let imageUrl = null;
 
     if (formData.image) {
@@ -34,6 +36,7 @@ const PostForm: React.FC<PostFormProps> = ({ addPost }) => {
 
     addPost({ ...formData, image: imageUrl });
     setFormData({ wish: '', author: '', image: null });
+    setIsLoading(false); // End loading
   };
 
   const handleInputChange = (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -79,7 +82,9 @@ const PostForm: React.FC<PostFormProps> = ({ addPost }) => {
           className="w-full p-2 border rounded"
         />
       </div>
-      <button type="submit" className="bg-blue-500 text-white p-2 rounded">Make a Post</button>
+      <button type="submit" className="bg-blue-500 text-white p-2 rounded" disabled={isLoading}>
+        {isLoading ? 'Posting...' : 'Make a Post'}
+      </button>
     </form>
   );
 };
