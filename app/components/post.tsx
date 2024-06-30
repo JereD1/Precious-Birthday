@@ -2,6 +2,7 @@ import React, { useState, ChangeEvent, FormEvent } from 'react';
 import { storage } from '@/Firebase';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
+
 interface PostFormProps {
   addPost: (post: Omit<Post, 'id'>) => void;
 }
@@ -18,6 +19,7 @@ interface FormData {
   author: string;
   image: File | null;
 }
+
 
 const PostForm: React.FC<PostFormProps> = ({ addPost }) => {
   const [formData, setFormData] = useState<FormData>({ wish: '', author: '', image: null });
@@ -49,9 +51,11 @@ const PostForm: React.FC<PostFormProps> = ({ addPost }) => {
       setFormData({ ...formData, image: event.target.files[0] });
     }
   };
+  
 
   return (
-    <form onSubmit={handleSubmit} className="w-1/2 border border-gray-500 rounded p-4 mb-6">
+  
+    <form onSubmit={handleSubmit} className="w-1/2 border border-gray-500 rounded p-4 mb-6 opacity-0">
       <div className="mb-4">
         <label className="block text-white">Wish:</label>
         <textarea
@@ -86,6 +90,7 @@ const PostForm: React.FC<PostFormProps> = ({ addPost }) => {
         {isLoading ? 'Posting...' : 'Make a Post'}
       </button>
     </form>
+  
   );
 };
 

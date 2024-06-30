@@ -35,12 +35,12 @@ const App: React.FC = () => {
   };
 
   return (
-    <div>
+    <div className='h-screen'>
       <div className='flex flex-col justify-center items-center m-5 p-2'> 
-        <h1 className='font-bold text-lg'>Birthday Wishes</h1>
+        <h1 className='font-bold text-lg'></h1>
       </div>
       <div className="flex flex-col justify-center items-center mx-auto p-4">
-        <PostForm addPost={addPost} />
+       { /*<PostForm addPost={addPost} /> */}
         <PostList posts={posts} />
       </div>
     </div>

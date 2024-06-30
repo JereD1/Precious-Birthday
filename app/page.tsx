@@ -8,7 +8,8 @@ export default function Home() {
     
     <main >
       <Header />
-      < Context />      
+      < Context />
+         
     </main>
   
   );
