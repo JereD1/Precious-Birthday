@@ -4,11 +4,6 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-  background-color: #171717; /* Set background color to black */
-  color: #fff; /* Set text color to white */
- 
-}
 
 *{
 	box-sizing: border-box;
