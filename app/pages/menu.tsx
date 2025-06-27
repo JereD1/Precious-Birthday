@@ -3,7 +3,6 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-
 import CreatePostModal from '../components/createPostModal';
 
 import {
@@ -22,45 +21,59 @@ const Menu = () => {
     if (isSignedIn) {
       setModalOpen(true);
     } else {
-      // Redirect to sign in page (you can customize the path)
       router.push('/login');
     }
   };
 
+  const handleHomeClick = () => {
+    router.refresh(); // Refreshes the current route
+  };
+
   return (
-    <div className="flex flex-col space-y-4 p-4">
-      <Link href="/" passHref>
-        <h2 className="text-lg font-semibold hover:text-blue-500 cursor-pointer">Home</h2>
-      </Link>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-tr from-purple-200 via-pink-100 to-blue-100 px-4">
+      <div className="w-full max-w-md bg-white rounded-3xl shadow-lg p-8 space-y-6 text-center">
+        {/* Home Button */}
+        <button
+          onClick={handleHomeClick}
+          className="text-2xl font-bold text-gray-800 hover:text-purple-600 transition duration-200 cursor-pointer"
+        >
+          🏢 Home
+        </button>
 
-      <SignedOut>
-        <div className="flex gap-4 items-center">
-          <Link href="/signup">
-            <button className="bg-gray-200 text-black rounded-full font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 cursor-pointer">
-              Sign Up
-            </button>
-          </Link>
+        {/* Auth Buttons */}
+        <SignedOut>
+          <div className="flex justify-center gap-4">
+            <Link href="/signup">
+              <button className="bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-full font-medium text-sm px-5 py-2 transition">
+                Sign Up
+              </button>
+            </Link>
 
-          <Link href="/login">
-            <button className="bg-[#6c47ff] text-white rounded-full font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 cursor-pointer">
-              Login
-            </button>
-          </Link>
-        </div>
-      </SignedOut>
+            <Link href="/login">
+              <button className="bg-[#6c47ff] hover:bg-[#5536d6] text-white rounded-full font-medium text-sm px-5 py-2 transition">
+                Login
+              </button>
+            </Link>
+          </div>
+        </SignedOut>
 
-      <SignedIn>
-        <UserButton />
-      </SignedIn>
+        {/* User Button */}
+        <SignedIn>
+          <div className="flex justify-center">
+            <UserButton afterSignOutUrl="/" />
+          </div>
+        </SignedIn>
 
-      <button
-        onClick={handleCreatePostClick}
-        className="mt-4 bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600"
-      >
-        Create Post
-      </button>
+        {/* Create Post */}
+        <button
+          onClick={handleCreatePostClick}
+          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-xl transition duration-300 shadow-md"
+        >
+          + Create Post
+        </button>
 
-      <CreatePostModal isOpen={isModalOpen} onClose={() => setModalOpen(false)} />
+        <CreatePostModal isOpen={isModalOpen} onClose={() => setModalOpen(false)} />
+      </div>
     </div>
   );
 };

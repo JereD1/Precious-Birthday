@@ -1,9 +1,11 @@
 import React from 'react'
+import Reminder from '../components/reminder'
+
 
 const event = () => {
   return (
     <div>
-      Right Side
+      <Reminder />
     </div>
   )
 }
