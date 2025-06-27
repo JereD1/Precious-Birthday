@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import FeedPage from './components/feed';
 import Menu from '@/app/pages/menu';
 import Event from '@/app/pages/event';
@@ -50,6 +51,7 @@ export default function Home() {
 
         {/* Mobile floating action buttons */}
         <div className="fixed bottom-4 right-4 flex flex-col space-y-4 md:hidden z-30">
+          <Link href="/birthdays">
           <button
             onClick={handleViewPosts}
             className="bg-blue-600 hover:bg-blue-700 text-white rounded-full w-14 h-14 flex items-center justify-center shadow-lg"
@@ -58,6 +60,7 @@ export default function Home() {
           >
             📃
           </button>
+          </Link>
           <button
             onClick={handleCreatePost}
             className="bg-purple-600 hover:bg-purple-700 text-white rounded-full w-14 h-14 flex items-center justify-center shadow-lg"
