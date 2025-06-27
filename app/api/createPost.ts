@@ -6,6 +6,7 @@ const client = sanityClient({
   dataset: "production",
   apiVersion: "2024-01-01",
   useCdn: false,
+  token: process.env.NEXT_PUBLIC_SANITY_TOKEN, // must be set in .env.local
 });
 
 // Define the expected structure for the post
@@ -43,3 +44,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     res.status(405).end(`Method ${req.method} Not Allowed`);
   }
 }
+
+
+
+
+
+
+
