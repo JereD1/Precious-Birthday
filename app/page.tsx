@@ -33,7 +33,7 @@ export default function Home() {
         </aside>
 
         {/* Center Feed - always visible, full height, scrollable */}
-        <div className="flex-1 h-full overflow-y-auto p-4 md:mx-[25%]">
+        <div className="flex-1 h-full overflow-y-auto bg-stone-200 p-4 md:mx-[25%]">
           <div className="max-w-2xl mx-auto">
             <FeedPage />
           </div>
