@@ -19,7 +19,7 @@ const CreatePostModal = ({ isOpen, onClose }: Props) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!isSignedIn || !user) {
-      router.push('/sign-in');
+      router.push('/login');
       return;
     }
 
