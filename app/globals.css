@@ -27,3 +27,13 @@
   animation: pulse 1.5s ease-in-out infinite;
   border-radius: 0.375rem; /* rounded-md */
 }
+
+
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none; /* IE/Edge */
+  scrollbar-width: none;    /* Firefox */
+}
