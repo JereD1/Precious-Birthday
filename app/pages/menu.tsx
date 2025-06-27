@@ -26,31 +26,31 @@ const Menu = () => {
   };
 
   const handleHomeClick = () => {
-    router.refresh(); // Refreshes the current route
+    router.refresh();
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-tr from-purple-200 via-pink-100 to-blue-100 px-4">
-      <div className="w-full max-w-md bg-white rounded-3xl shadow-lg p-8 space-y-6 text-center">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-tr from-purple-200 via-pink-100 to-blue-100 px-4 sm:px-6 lg:px-8">
+      <div className="w-full max-w-sm sm:max-w-md md:max-w-lg bg-white rounded-3xl shadow-2xl p-6 sm:p-8 space-y-6 text-center">
         {/* Home Button */}
         <button
           onClick={handleHomeClick}
-          className="text-2xl font-bold text-gray-800 hover:text-purple-600 transition duration-200 cursor-pointer"
+          className="text-xl sm:text-2xl font-bold text-gray-800 hover:text-purple-600 transition duration-200"
         >
-          🏢 Home
+          🏠 Home
         </button>
 
         {/* Auth Buttons */}
         <SignedOut>
-          <div className="flex justify-center gap-4">
-            <Link href="/signup">
-              <button className="bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-full font-medium text-sm px-5 py-2 transition">
+          <div className="flex flex-col sm:flex-row justify-center gap-4">
+            <Link href="/signup" className="w-full sm:w-auto">
+              <button className="w-full sm:w-auto bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-full font-medium text-sm px-5 py-2 transition duration-200">
                 Sign Up
               </button>
             </Link>
 
-            <Link href="/login">
-              <button className="bg-[#6c47ff] hover:bg-[#5536d6] text-white rounded-full font-medium text-sm px-5 py-2 transition">
+            <Link href="/login" className="w-full sm:w-auto">
+              <button className="w-full sm:w-auto bg-[#6c47ff] hover:bg-[#5536d6] text-white rounded-full font-medium text-sm px-5 py-2 transition duration-200">
                 Login
               </button>
             </Link>
@@ -72,6 +72,7 @@ const Menu = () => {
           + Create Post
         </button>
 
+        {/* Modal */}
         <CreatePostModal isOpen={isModalOpen} onClose={() => setModalOpen(false)} />
       </div>
     </div>
