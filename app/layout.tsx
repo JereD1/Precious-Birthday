@@ -1,5 +1,9 @@
 import type { Metadata } from "next";
-import { ClerkProvider } from "@clerk/nextjs";
+import { ClerkProvider,  SignInButton,
+  SignUpButton,
+  SignedIn,
+  SignedOut,
+  UserButton, } from "@clerk/nextjs";
 import { Inter } from "next/font/google";
 import "./globals.css";
 <link rel="icon" href="/favicon.ico" sizes="any" />
@@ -27,6 +31,19 @@ export default function RootLayout({
   return (
     <ClerkProvider>
     <html lang="en">
+      <header className="flex justify-end items-center p-4 gap-4 h-16">
+              <SignedOut>
+                <SignInButton>
+                  
+                </SignInButton>
+                <SignUpButton>
+                  
+                </SignUpButton>
+              </SignedOut>
+              <SignedIn>
+                <UserButton />
+              </SignedIn>
+            </header>
       <body className={inter.className}>{children}</body>
     </html>
     </ClerkProvider>
