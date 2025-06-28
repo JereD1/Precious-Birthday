@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import sanityClient from '@sanity/client';
 
-const client = sanityClient({
+export const client = sanityClient({
   projectId: "e9q159no",
   dataset: "production",
   apiVersion: "2024-01-01",
