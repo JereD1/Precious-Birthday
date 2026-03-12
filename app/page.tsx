@@ -16,13 +16,11 @@ const navItems = [
   { icon: '👤', label: 'Profile', href: '/profile' },
 ];
 
-// Mobile bottom tab items (5 max like Twitter)
 const mobileTabItems = [
-  { icon: '🏠', href: '/' },
-  { icon: '🔍', href: '/search' },
-  { icon: '🎂', href: '/birthdays' },
-  { icon: '🔔', href: '/notifications' },
-  { icon: '✉️', href: '/messages' },
+  { icon: '🏠', label: 'Home', href: '/' },
+  { icon: '🎂', label: 'B-Days', href: '/birthdays' },
+  { icon: '🔔', label: 'Alerts', href: '/notifications' },
+  { icon: '🔖', label: 'Saved', href: '/bookmarks' },
 ];
 
 export default function Home() {
@@ -65,7 +63,7 @@ export default function Home() {
                     href={item.href}
                     className={`flex items-center gap-4 px-3 py-3 rounded-full transition group w-fit lg:w-full ${
                       pathname === item.href
-                        ? 'font-bold text-white'
+                        ? 'font-bold text-white bg-gray-900'
                         : 'text-gray-400 hover:text-white hover:bg-gray-900'
                     }`}
                   >
@@ -114,7 +112,7 @@ export default function Home() {
                 </div>
                 <div className="lg:hidden flex justify-center">
                   <Link href="/login">
-                    <button className="w-10 h-10 rounded-full border border-gray-600 flex items-center justify-center hover:bg-gray-900 transition">
+                    <button className="w-10 h-10 rounded-full border border-gray-600 flex items-center justify-center hover:bg-gray-900 transition text-sm">
                       🔑
                     </button>
                   </Link>
@@ -124,10 +122,47 @@ export default function Home() {
           </aside>
 
           {/* ── CENTER FEED ── */}
-          <section className="flex-1 min-h-screen border-r border-gray-800 overflow-y-auto pb-20 md:pb-0">
-            {/* Feed Header */}
-            <div className="sticky top-0 z-10 bg-black/80 backdrop-blur-md border-b border-gray-800 px-4 py-3">
-              <h1 className="text-lg font-extrabold text-white">🎉 For You</h1>
+          <section className="flex-1 min-h-screen border-r border-gray-800 overflow-y-auto pb-24 md:pb-0">
+            {/* Feed Header — mobile shows logo + auth */}
+            <div className="sticky top-0 z-10 bg-black/90 backdrop-blur-md border-b border-gray-800 px-4 py-3">
+              <div className="flex items-center justify-between md:justify-start">
+                {/* Mobile: logo on left */}
+                <div className="flex items-center gap-2 md:hidden">
+                  <span className="text-xl">🎂</span>
+                  <span className="font-extrabold text-base bg-gradient-to-r from-pink-400 to-purple-400 bg-clip-text text-transparent">
+                    BirthdaySpace
+                  </span>
+                </div>
+
+                {/* Desktop: page title */}
+                <h1 className="hidden md:block text-lg font-extrabold text-white">Homepage</h1>
+
+                {/* Mobile: auth on right */}
+                <div className="flex items-center gap-2 md:hidden">
+                  <SignedIn>
+                    <button
+                      onClick={handleCreatePost}
+                      className="w-8 h-8 flex items-center justify-center bg-gradient-to-r from-pink-500 to-purple-600 rounded-full text-sm shadow-md"
+                      title="Create Post"
+                    >
+                      ✏️
+                    </button>
+                    <UserButton afterSignOutUrl="/" />
+                  </SignedIn>
+                  <SignedOut>
+                    <Link href="/login">
+                      <button className="px-3 py-1.5 rounded-full border border-gray-600 text-xs font-semibold text-white hover:bg-gray-900 transition">
+                        Login
+                      </button>
+                    </Link>
+                    <Link href="/signup">
+                      <button className="px-3 py-1.5 rounded-full bg-white text-black text-xs font-semibold hover:bg-gray-200 transition">
+                        Sign Up
+                      </button>
+                    </Link>
+                  </SignedOut>
+                </div>
+              </div>
             </div>
 
             <div className="px-4">
@@ -144,19 +179,24 @@ export default function Home() {
       </main>
 
       {/* ── MOBILE BOTTOM TAB BAR ── */}
-      <nav className="fixed bottom-0 left-0 right-0 md:hidden z-50 bg-black border-t border-gray-800">
-        <div className="flex items-center justify-around px-2 py-2">
+      <nav className="fixed bottom-0 left-0 right-0 md:hidden z-50 bg-black/95 backdrop-blur-md border-t border-gray-800">
+        <div className="flex items-center justify-center gap-1 px-4 py-2 max-w-sm mx-auto">
           {mobileTabItems.map((item) => (
             <Link
               key={item.href}
               href={item.href}
-              className={`flex items-center justify-center w-12 h-12 rounded-full transition ${
+              className={`flex flex-col items-center justify-center flex-1 py-1.5 px-2 rounded-xl transition-all duration-150 ${
                 pathname === item.href
-                  ? 'text-white'
-                  : 'text-gray-500 hover:text-white hover:bg-gray-900'
+                  ? 'text-white bg-gray-800'
+                  : 'text-gray-600 hover:text-gray-400'
               }`}
             >
-              <span className="text-2xl">{item.icon}</span>
+              <span className="text-lg leading-none">{item.icon}</span>
+              <span className={`text-[10px] mt-0.5 font-medium ${
+                pathname === item.href ? 'text-white' : 'text-gray-600'
+              }`}>
+                {item.label}
+              </span>
             </Link>
           ))}
         </div>
