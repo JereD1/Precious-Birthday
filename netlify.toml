@@ -1,0 +1,15 @@
+[build]
+  command = "npm run build"
+  publish = ".next"
+
+[build.environment]
+  NODE_VERSION = "20"
+```
+
+---
+
+**Option 3 — Set it in Netlify dashboard:**
+
+Go to **Netlify → Site Settings → Environment Variables** and add:
+```
+NODE_VERSION = 20
