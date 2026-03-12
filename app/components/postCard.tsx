@@ -1,4 +1,5 @@
 'use client';
+
 import { useEffect, useState } from 'react';
 import { useUser } from '@clerk/nextjs';
 import { client } from '@/app/lib/client';
@@ -19,8 +20,21 @@ type Post = {
   authorImage: string;
   mediaUrl?: string;
   createdAt: string;
-  likes?: number;
+  likes?: string[];
   comments?: Comment[];
+};
+
+const formatPostDate = (dateStr: string) => {
+  const date = new Date(dateStr);
+  const now = new Date();
+  const isThisYear = date.getFullYear() === now.getFullYear();
+  return date.toLocaleString(undefined, {
+    year: isThisYear ? undefined : 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
 };
 
 const PostList = () => {
@@ -29,6 +43,7 @@ const PostList = () => {
   const [loading, setLoading] = useState(true);
   const [commentTexts, setCommentTexts] = useState<{ [postId: string]: string }>({});
   const [modalImage, setModalImage] = useState<string | null>(null);
+  const [openComments, setOpenComments] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     const fetchPosts = async () => {
@@ -41,18 +56,19 @@ const PostList = () => {
         setLoading(false);
       }
     };
-
     fetchPosts();
   }, []);
 
   const likePost = async (postId: string) => {
-    if (!isSignedIn) return alert('You need to sign in to like a post.');
+    if (!isSignedIn) return alert('Sign in to like posts.');
+    const post = posts.find((p) => p._id === postId);
+    if (post?.likes?.includes(user.id)) return;
 
     try {
-      await client.patch(postId).inc({ likes: 1 }).commit();
+      await client.patch(postId).setIfMissing({ likes: [] }).append('likes', [user.id]).commit();
       setPosts((prev) =>
-        prev.map((post) =>
-          post._id === postId ? { ...post, likes: (post.likes ?? 0) + 1 } : post
+        prev.map((p) =>
+          p._id === postId ? { ...p, likes: [...(p.likes ?? []), user.id] } : p
         )
       );
     } catch (err) {
@@ -73,184 +89,237 @@ const PostList = () => {
     };
 
     try {
-      await client
-        .patch(postId)
-        .setIfMissing({ comments: [] })
-        .append('comments', [comment])
-        .commit();
-
+      await client.patch(postId).setIfMissing({ comments: [] }).append('comments', [comment]).commit();
       setPosts((prev) =>
-        prev.map((post) =>
-          post._id === postId
-            ? {
-                ...post,
-                comments: post.comments ? [...post.comments, comment] : [comment],
-              }
-            : post
+        prev.map((p) =>
+          p._id === postId ? { ...p, comments: [...(p.comments ?? []), comment] } : p
         )
       );
-
       setCommentTexts((prev) => ({ ...prev, [postId]: '' }));
     } catch (err) {
       console.error('Error adding comment:', err);
     }
   };
 
-  if (loading) return <p className="text-center mt-5">Loading posts...</p>;
+  const toggleComments = (postId: string) => {
+    setOpenComments((prev) => {
+      const next = new Set(prev);
+      next.has(postId) ? next.delete(postId) : next.add(postId);
+      return next;
+    });
+  };
+
+  // ── LOADING SKELETON ──
+  if (loading) {
+    return (
+      <div className="divide-y divide-gray-800">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="px-4 py-5 animate-pulse">
+            <div className="flex gap-3">
+              <div className="w-10 h-10 bg-gray-800 rounded-full flex-shrink-0" />
+              <div className="flex-1 space-y-3">
+                <div className="flex gap-2">
+                  <div className="w-28 h-3 bg-gray-800 rounded-full" />
+                  <div className="w-16 h-3 bg-gray-800 rounded-full" />
+                </div>
+                <div className="w-full h-3 bg-gray-800 rounded-full" />
+                <div className="w-3/4 h-3 bg-gray-800 rounded-full" />
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  // ── EMPTY STATE ──
+  if (posts.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-24 text-center">
+        <p className="text-5xl mb-4">🎈</p>
+        <p className="text-gray-500 font-medium">No posts yet. Be the first to share!</p>
+      </div>
+    );
+  }
 
   return (
     <>
-      <div className="space-y-8 mt-8 max-w-3xl mx-auto">
-        {posts.map((post) => (
-          <div
-            key={post._id}
-            className="bg-white rounded-2xl shadow-lg p-6 hover:shadow-xl transition-shadow duration-300"
-          >
-            {/* Author Info */}
-            <div className="flex items-center space-x-4 mb-4">
-              <img
-                src={post.authorImage || '/default-avatar.png'}
-                alt={post.authorName}
-                className="w-12 h-12 rounded-full object-cover border-2 border-indigo-500"
-              />
-              <div>
-                <p className="font-semibold text-lg text-gray-900">{post.authorName}</p>
-                <p className="text-xs text-gray-400">
-                  {new Date(post.createdAt).toLocaleString()}
-                </p>
-              </div>
-            </div>
+      {/* Posts — Twitter-style dividers, no cards */}
+      <div className="divide-y divide-gray-800">
+        {posts.map((post) => {
+          const isLiked = isSignedIn ? (post.likes?.includes(user.id) ?? false) : false;
+          const likeCount = post.likes?.length ?? 0;
+          const commentsOpen = openComments.has(post._id);
+          const commentCount = post.comments?.length ?? 0;
 
-            <p className="text-gray-800 text-base mb-4 whitespace-pre-line">{post.content}</p>
+          return (
+            <article
+              key={post._id}
+              className="px-4 py-4 hover:bg-white/[0.02] transition-colors duration-150 cursor-pointer"
+            >
+              {/* Author row */}
+              <div className="flex gap-3">
+                {/* Avatar */}
+                <img
+                  src={post.authorImage || '/default-avatar.png'}
+                  alt={post.authorName}
+                  className="w-10 h-10 rounded-full object-cover flex-shrink-0 ring-1 ring-gray-700"
+                />
 
-            {/* Media */}
-            {post.mediaUrl && (
-              <div className="rounded-lg overflow-hidden mb-6 shadow-sm cursor-pointer">
-                {post.mediaUrl.endsWith('.mp4') || post.mediaUrl.endsWith('.webm') ? (
-                  <video
-                    controls
-                    src={post.mediaUrl}
-                    className="w-full max-h-96 rounded-lg object-cover"
-                  >
-                    Your browser does not support the video tag.
-                  </video>
-                ) : (
-                  <img
-                    src={post.mediaUrl}
-                    alt="Post media"
-                    className="w-full max-h-96 rounded-lg object-cover"
-                    loading="lazy"
-                    onClick={() => setModalImage(post.mediaUrl!)}
-                  />
-                )}
-              </div>
-            )}
+                {/* Right side */}
+                <div className="flex-1 min-w-0">
+                  {/* Name + date */}
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <p className="font-bold text-white text-sm">{post.authorName}</p>
+                    <span className="text-gray-500 text-xs">·</span>
+                    <p className="text-gray-500 text-xs">{formatPostDate(post.createdAt)}</p>
+                  </div>
 
-            {/* Like Button */}
-            <div className="flex items-center space-x-6 mb-5">
-              <button
-                onClick={() => likePost(post._id)}
-                className="flex items-center space-x-2 text-indigo-600 hover:text-indigo-700 font-semibold transition-colors"
-                aria-label="Like post"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5"
-                  fill={post.likes && post.likes > 0 ? 'currentColor' : 'none'}
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={2}
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M14 9l-3 3m0 0l-3-3m3 3V4" />
-                </svg>
-                <span>{post.likes ?? 0} Like{post.likes === 1 ? '' : 's'}</span>
-              </button>
-            </div>
+                  {/* Content */}
+                  <p className="text-gray-200 text-sm mt-1 leading-relaxed whitespace-pre-line">
+                    {post.content}
+                  </p>
 
-            {/* Comments */}
-            <section>
-              <h4 className="text-gray-900 font-semibold mb-3 border-b border-gray-200 pb-2 text-lg">
-                Comments ({post.comments?.length ?? 0})
-              </h4>
-
-              {post.comments?.length === 0 && (
-                <p className="text-gray-500 italic mb-4">No comments yet. Be the first!</p>
-              )}
-
-              <ul className="space-y-4 max-h-56 overflow-y-auto scrollbar-thin scrollbar-thumb-indigo-300 scrollbar-track-gray-100">
-                {post.comments?.map((comment, idx) => (
-                  <li
-                    key={idx}
-                    className="flex space-x-3 p-3 rounded-lg bg-indigo-50/30 border border-indigo-100"
-                  >
-                    {comment.commenterImage ? (
-                      <img
-                        src={comment.commenterImage}
-                        alt={comment.commenterName}
-                        className="w-10 h-10 rounded-full object-cover border border-indigo-300"
-                      />
-                    ) : (
-                      <div className="w-10 h-10 rounded-full bg-indigo-300 flex items-center justify-center text-white font-bold">
-                        {comment.commenterName?.[0]?.toUpperCase() || 'A'}
-                      </div>
-                    )}
-                    <div className="flex flex-col">
-                      <p className="text-indigo-900 font-semibold">{comment.commenterName}</p>
-                      <p className="text-xs text-gray-400 mb-1">
-                        {new Date(comment.createdAt).toLocaleString()}
-                      </p>
-                      <p className="text-gray-700 whitespace-pre-line">{comment.text}</p>
+                  {/* Media */}
+                  {post.mediaUrl && (
+                    <div className="mt-3 rounded-2xl overflow-hidden border border-gray-800">
+                      {post.mediaUrl.endsWith('.mp4') || post.mediaUrl.endsWith('.webm') ? (
+                        <video controls src={post.mediaUrl} className="w-full max-h-80 object-cover" />
+                      ) : (
+                        <img
+                          src={post.mediaUrl}
+                          alt="Post media"
+                          className="w-full max-h-80 object-cover cursor-zoom-in hover:opacity-90 transition"
+                          loading="lazy"
+                          onClick={() => setModalImage(post.mediaUrl!)}
+                        />
+                      )}
                     </div>
-                  </li>
-                ))}
-              </ul>
+                  )}
 
-              {/* Comment Input */}
-              {isSignedIn && (
-                <form
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    addComment(post._id);
-                  }}
-                  className="mt-5 flex space-x-3"
-                >
-                  <input
-                    type="text"
-                    placeholder="Write a comment..."
-                    value={commentTexts[post._id] || ''}
-                    onChange={(e) =>
-                      setCommentTexts((prev) => ({
-                        ...prev,
-                        [post._id]: e.target.value,
-                      }))
-                    }
-                    className="flex-grow border border-indigo-300 rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  />
-                  <button
-                    type="submit"
-                    className="bg-indigo-600 text-white px-5 py-2 rounded-full font-semibold hover:bg-indigo-700 transition-colors"
-                  >
-                    Send
-                  </button>
-                </form>
-              )}
-              {!isSignedIn && (
-                <p className="text-sm text-gray-500 italic mt-3">
-                  Sign in to like and comment on posts.
-                </p>
-              )}
-            </section>
-          </div>
-        ))}
+                  {/* Action buttons */}
+                  <div className="flex items-center gap-1 mt-3 -ml-2">
+                    {/* Like */}
+                    <button
+                      onClick={() => likePost(post._id)}
+                      disabled={isLiked}
+                      className={`group flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                        isLiked
+                          ? 'text-pink-500 cursor-default'
+                          : 'text-gray-500 hover:text-pink-500 hover:bg-pink-500/10'
+                      }`}
+                    >
+                      <span className="text-base">{isLiked ? '❤️' : '🤍'}</span>
+                      <span>{likeCount}</span>
+                    </button>
+
+                    {/* Comment */}
+                    <button
+                      onClick={() => toggleComments(post._id)}
+                      className="group flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium text-gray-500 hover:text-blue-400 hover:bg-blue-400/10 transition-all"
+                    >
+                      <span className="text-base">💬</span>
+                      <span>{commentCount}</span>
+                    </button>
+                  </div>
+
+                  {/* Comments section */}
+                  {commentsOpen && (
+                    <div className="mt-3 border-t border-gray-800 pt-3">
+                      {/* Comment list */}
+                      {commentCount > 0 && (
+                        <ul className="space-y-3 max-h-56 overflow-y-auto mb-3">
+                          {post.comments?.map((comment, idx) => (
+                            <li key={idx} className="flex gap-2.5">
+                              {comment.commenterImage ? (
+                                <img
+                                  src={comment.commenterImage}
+                                  alt={comment.commenterName}
+                                  className="w-7 h-7 rounded-full object-cover flex-shrink-0 mt-0.5"
+                                />
+                              ) : (
+                                <div className="w-7 h-7 rounded-full bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0 mt-0.5">
+                                  {comment.commenterName?.[0]?.toUpperCase()}
+                                </div>
+                              )}
+                              <div className="flex-1 bg-gray-900 rounded-2xl px-3 py-2">
+                                <div className="flex items-center gap-2">
+                                  <p className="text-xs font-bold text-white">{comment.commenterName}</p>
+                                  <span className="text-gray-600 text-[10px]">·</span>
+                                  <p className="text-[10px] text-gray-500">{formatPostDate(comment.createdAt)}</p>
+                                </div>
+                                <p className="text-xs text-gray-300 mt-0.5 leading-relaxed">{comment.text}</p>
+                              </div>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+
+                      {commentCount === 0 && (
+                        <p className="text-xs text-gray-600 italic mb-3">No comments yet — say something! 🎉</p>
+                      )}
+
+                      {/* Comment input */}
+                      {isSignedIn ? (
+                        <form
+                          onSubmit={(e) => { e.preventDefault(); addComment(post._id); }}
+                          className="flex gap-2 items-center"
+                        >
+                          <img
+                            src={user?.imageUrl}
+                            alt="You"
+                            className="w-7 h-7 rounded-full object-cover flex-shrink-0"
+                          />
+                          <div className="flex-1 flex gap-2">
+                            <input
+                              type="text"
+                              placeholder="Post your reply..."
+                              value={commentTexts[post._id] || ''}
+                              onChange={(e) =>
+                                setCommentTexts((prev) => ({ ...prev, [post._id]: e.target.value }))
+                              }
+                              className="flex-1 bg-gray-900 border border-gray-700 rounded-full px-4 py-2 text-sm text-gray-200 placeholder-gray-600 focus:outline-none focus:border-pink-500 transition"
+                            />
+                            <button
+                              type="submit"
+                              disabled={!commentTexts[post._id]?.trim()}
+                              className="px-4 py-2 bg-gradient-to-r from-pink-500 to-purple-600 text-white text-xs font-bold rounded-full hover:from-pink-600 hover:to-purple-700 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                            >
+                              Reply
+                            </button>
+                          </div>
+                        </form>
+                      ) : (
+                        <p className="text-xs text-gray-600 italic text-center py-1">
+                          <a href="/login" className="text-pink-500 hover:underline font-semibold">Sign in</a> to reply.
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </article>
+          );
+        })}
       </div>
 
       {/* Image Modal */}
       {modalImage && (
         <div
           onClick={() => setModalImage(null)}
-          className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 cursor-zoom-out"
+          className="fixed inset-0 bg-black/95 flex items-center justify-center z-50 cursor-zoom-out p-4"
         >
-          <img src={modalImage} alt="Full view" className="max-w-full max-h-full rounded-xl" />
+          <img
+            src={modalImage}
+            alt="Full view"
+            className="max-w-full max-h-full rounded-2xl object-contain"
+          />
+          <button
+            onClick={() => setModalImage(null)}
+            className="absolute top-4 right-4 w-9 h-9 bg-gray-800 hover:bg-gray-700 rounded-full flex items-center justify-center text-white text-sm transition"
+          >
+            ✕
+          </button>
         </div>
       )}
     </>
